@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Semantic Lead Finder</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080b0f;
+    --surface: #0e1318;
+    --border: #1a2330;
+    --accent: #00e5a0;
+    --accent2: #00aaff;
+    --muted: #3a4a5a;
+    --text: #c8d8e8;
+    --text-dim: #5a7080;
+    --danger: #ff4466;
+    --mono: 'Space Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,160,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,160,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 60px 24px 80px;
+  }
+
+  header { margin-bottom: 52px; }
+
+  .logo-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+    border: 2px solid var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: var(--accent);
+    font-family: var(--mono);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  h1 {
+    font-family: var(--sans);
+    font-size: 28px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.5px;
+  }
+
+  .tagline {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+    margin-top: 4px;
+  }
+
+  .tagline span { color: var(--accent); }
+
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 32px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: background 0.3s;
+    flex-shrink: 0;
+  }
+  .status-dot.ready { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+
+  .search-wrap {
+    position: relative;
+    margin-bottom: 16px;
+  }
+
+  .search-prefix {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--accent);
+    pointer-events: none;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    padding: 18px 18px 18px 44px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input[type="text"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,229,160,0.08);
+  }
+  input[type="text"]::placeholder { color: var(--muted); }
+
+  .search-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .result-count {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 6px 10px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .search-btn {
+    padding: 10px 24px;
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    color: #080b0f;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    letter-spacing: 0.05em;
+    margin-left: auto;
+  }
+  .search-btn:hover { opacity: 0.85; }
+  .search-btn:active { transform: scale(0.97); }
+  .search-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .examples {
+    margin-bottom: 36px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .examples-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .pill {
+    padding: 5px 12px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .pill:hover {
+    border-color: var(--accent2);
+    color: var(--accent2);
+    background: rgba(0,170,255,0.05);
+  }
+
+  #results-section { display: none; }
+
+  .results-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .results-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .results-query {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+  }
+
+  .results-count {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .export-btn {
+    padding: 6px 14px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+  }
+  .export-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  .card-list { display: flex; flex-direction: column; gap: 2px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 0 16px;
+    align-items: start;
+    transition: border-color 0.15s, background 0.15s;
+    animation: fadeIn 0.2s ease both;
+  }
+  .card:hover { border-color: rgba(0,229,160,0.2); background: #0f1519; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    padding-top: 3px;
+    text-align: right;
+  }
+
+  .card-body { min-width: 0; }
+
+  .card-name {
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+
+  .card-url {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent2);
+    text-decoration: none;
+    opacity: 0.7;
+    display: block;
+    margin-bottom: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .card-url:hover { opacity: 1; }
+
+  .card-highlight {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.6;
+    border-left: 2px solid var(--accent);
+    padding-left: 10px;
+    opacity: 0.8;
+  }
+
+  .state-msg {
+    text-align: center;
+    padding: 48px 24px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+  }
+  .state-msg.error { color: var(--danger); border-color: rgba(255,68,102,0.2); }
+
+  .spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .powered-by {
+    margin-top: 6px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .powered-by span { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="logo-row">
+      <div class="logo-icon">∿</div>
+      <h1>Semantic Lead Finder</h1>
+    </div>
+    <p class="tagline">Powered by <span>Exa API</span> · real-time web search · natural language queries</p>
+    <p class="powered-by">neural search engine — not keyword matching</p>
+  </header>
+
+  <div class="status-bar">
+    <div class="status-dot" id="status-dot"></div>
+    <span id="status-text">Checking connection...</span>
+  </div>
+
+  <div class="search-wrap">
+    <span class="search-prefix">›</span>
+    <input type="text" id="query"
+      placeholder="e.g. B2B SaaS tools for sales automation, Series A fintech in Southeast Asia..."
+      autocomplete="off" />
+  </div>
+
+  <div class="search-controls">
+    <span class="result-count">
+      show
+      <select id="top-k">
+        <option value="5">5</option>
+        <option value="10" selected>10</option>
+        <option value="20">20</option>
+      </select>
+      results
+    </span>
+    <button class="search-btn" id="search-btn" onclick="doSearch()">SEARCH</button>
+  </div>
+
+  <div class="examples">
+    <span class="examples-label">Try →</span>
+    <button class="pill" onclick="setQuery(this)">B2B SaaS for sales automation</button>
+    <button class="pill" onclick="setQuery(this)">AI developer infrastructure startups</button>
+    <button class="pill" onclick="setQuery(this)">fintech for small businesses</button>
+    <button class="pill" onclick="setQuery(this)">climate tech carbon capture</button>
+    <button class="pill" onclick="setQuery(this)">healthcare AI diagnostics</button>
+  </div>
+
+  <div id="results-section">
+    <div class="results-header">
+      <span class="results-title">Results for</span>
+      <span class="results-query" id="results-query"></span>
+      <span class="results-count" id="results-count"></span>
+      <button class="export-btn" onclick="exportCSV()">↓ Export CSV</button>
+    </div>
+    <div id="results-list"></div>
+  </div>
+
+</div>
+
+<script>
+let lastQuery = '';
+let lastTopK = 10;
+
+async function checkStatus() {
+  const dot = document.getElementById('status-dot');
+  const txt = document.getElementById('status-text');
+  try {
+    const res = await fetch('/api/status');
+    const data = await res.json();
+    if (data.ready) {
+      dot.className = 'status-dot ready';
+      txt.textContent = 'Connected — Exa API ready';
+    } else {
+      dot.className = 'status-dot';
+      txt.textContent = 'EXA_API_KEY not set in .env';
+    }
+  } catch(e) {
+    dot.className = 'status-dot';
+    txt.textContent = 'Server not reachable — run: python3 app.py';
+  }
+}
+
+async function doSearch() {
+  const query = document.getElementById('query').value.trim();
+  const topK = parseInt(document.getElementById('top-k').value);
+  if (!query) return;
+
+  lastQuery = query;
+  lastTopK = topK;
+
+  const btn = document.getElementById('search-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>';
+
+  const section = document.getElementById('results-section');
+  const list = document.getElementById('results-list');
+  section.style.display = 'block';
+  list.innerHTML = '<div class="state-msg"><span class="spinner"></span>&nbsp; Searching the live web...</div>';
+
+  try {
+    const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&top=${topK}`);
+    const data = await res.json();
+    if (data.error) {
+      list.innerHTML = `<div class="state-msg error">${data.error}</div>`;
+    } else {
+      document.getElementById('results-query').textContent = `"${data.query}"`;
+      document.getElementById('results-count').textContent = `${data.results.length} results`;
+      renderResults(data.results);
+    }
+  } catch(e) {
+    list.innerHTML = `<div class="state-msg error">Request failed: ${e.message}</div>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'SEARCH';
+}
+
+function renderResults(results) {
+  const list = document.getElementById('results-list');
+  if (!results.length) {
+    list.innerHTML = '<div class="state-msg">No results found.</div>';
+    return;
+  }
+  list.innerHTML = '<div class="card-list">' + results.map((r, i) => `
+    <div class="card" style="animation-delay:${i*0.04}s">
+      <span class="card-num">${r.rank}</span>
+      <div class="card-body">
+        <div class="card-name">${r.title || '—'}</div>
+        <a class="card-url" href="${r.url}" target="_blank" rel="noopener">${r.url}</a>
+        ${r.highlight ? `<div class="card-highlight">${r.highlight}</div>` : ''}
+      </div>
+    </div>`).join('') + '</div>';
+}
+
+function exportCSV() {
+  if (!lastQuery) return;
+  window.location.href = `/api/export?q=${encodeURIComponent(lastQuery)}&top=${lastTopK}`;
+}
+
+function setQuery(btn) {
+  document.getElementById('query').value = btn.textContent;
+  doSearch();
+}
+
+document.getElementById('query').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doSearch();
+});
+
+checkStatus();
+</script>
+</body>
+</html>
