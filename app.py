@@ -68,4 +68,4 @@ def export():
 if __name__ == "__main__":
     print("\n🔍 Semantic Lead Finder — powered by Exa API")
     print("   Open: http://localhost:5001\n")
-    app.run(debug=False, port=5001)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5001)), debug=False)
